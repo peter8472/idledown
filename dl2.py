@@ -14,18 +14,18 @@ STOP = 'stop'
 def get_downloads():
     pass
 class Download():
-    def __init__(self, bucket,key,dirname, chunksize = CHUNKSIZE, sleep=0,maxcount=0):
+    def __init__(self, bucket,key,dirname, chunksize , 	sleep=0,maxcount=0):
         self.s3 = boto3.resource("s3")
         self.bucket = bucket
         self.key = key
-	self.sleep = sleep
-	self.maxcount =  maxcount
+        self.sleep = sleep
+        self.maxcount =  maxcount
         self.chunksize = chunksize
         self.object = self.s3.Object(self.bucket, self.key)
         self.download_directory  = Path.home() / ".aws" / "downloads" / dirname
         self.filename = self.download_directory / Path(key).name
         if not self.download_directory.exists():
-            self.start_download(dirname)
+            self.start_download()
         else:
             print('{} essists'.format(self.download_directory))
         shelfname = self.download_directory / "dl.shelf"
@@ -111,15 +111,10 @@ class Download():
         if len(rows) < 1:
             return False
         return rows[0]
-
-
-
-            
-        
         
 
 if __name__ == "__main__":
-    x =  Download("przwy-podcast", "android-studio-ide-193.6626763-windows.exe",
+    x =  Download("przwy-podcast", "Hitzthought.mp3",
          "testrun3",chunksize=5000,sleep=2,maxcount=10)
     x.create_sqlite_table()
     
