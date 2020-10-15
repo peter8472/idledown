@@ -1,4 +1,8 @@
+token.pickle
+.vscode/
+credentials.json
 # Byte-compiled / optimized / DLL files
+token.pickle
 __pycache__/
 *.py[cod]
 *$py.class
