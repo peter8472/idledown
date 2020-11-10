@@ -41,15 +41,20 @@ class Download():
         sqlitefile = self.download_directory / SQLITE
         self.conn = sqlite3.connect(str(sqlitefile))
         self.conn.execute("""CREATE TABLE if not exists runtable (
+        filename TEXT,
+        bucket TEXT,
+        key TEXT,
 		state TEXT, 
 		chunksize INT,
 		sleep DECIMAL,
 		count INT,
-		maxcount INT
+		maxcount INT,
+        filesize INT
 		);""")
         self.conn.execute("delete from runtable;")
-        self.conn.execute("insert into runtable values (?, ?, ?, ?, ?);", 
-        ("run", self.chunksize, 0, 0, 0))
+        self.conn.execute("""insert into runtable values (?, ?
+              );""", 
+        (self.filename,self.bucket,self.key, "run", self.chunksize))
         self.conn.commit()
         
 
@@ -71,6 +76,8 @@ class Download():
             download = self.object.get(Range="bytes={}-{}".format(size,size+self.chunksize))
             reader = download['Body']
             print (download['ContentRange'])
+            afterslash = download['ContentRange'].split("/")[1]
+            print("afterslash: {}".format(afterslash))
             print("size is {}".format(download['ContentLength']))
             fd.write(reader.read())
             return True
@@ -117,4 +124,16 @@ if __name__ == "__main__":
     x =  Download("przwy-podcast", "Hitzthought.mp3",
          "testrun3",chunksize=5000,sleep=2,maxcount=10)
     x.create_sqlite_table()
-    
+    while True:
+        state = x.get_state()[0]
+        if state == PAUSE:
+            time.sleep(0.5)
+            
+        elif state == STOP:
+            break
+        elif state == RUN:
+            x.downpart()
+        else:
+            print("unknown state: {}".format(state))
+            break
+           
