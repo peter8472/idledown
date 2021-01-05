@@ -20,12 +20,13 @@ class Podcast():
         myfiles.sort(key=lambda x: x.last_modified, reverse=True)
         for i in myfiles[0:7]:
             print(i.key, i.last_modified)
+        self.lastfile = myfiles[0]
 
 
 if __name__ == "__main__":
     econtalk = Podcast()
-    x =  dl2.Download("przwy-podcast", "Hitzthought.mp3",
-         "testrun3",chunksize=5000,sleep=2,maxcount=10)
+    x =  dl2.Download("przwy-podcast", econtalk.lastfile.key,
+         "testrun3",chunksize=25000,sleep=2,maxcount=10)
     x.create_sqlite_table()
     while True:
         state = x.get_state()[0]
@@ -36,6 +37,7 @@ if __name__ == "__main__":
             break
         elif state == dl2.RUN:
             x.downpart()
+            time.sleep(x.sleep)
         else:
             print("unknown state: {}".format(state))
             break

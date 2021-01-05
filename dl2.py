@@ -52,9 +52,11 @@ class Download():
         filesize INT
 		);""")
         self.conn.execute("delete from runtable;")
-        self.conn.execute("""insert into runtable values (?, ?
+        self.conn.execute("""insert into runtable values (
+              ?, ?, ?, ?, ?,
+              null,null,null,null
               );""", 
-        (self.filename,self.bucket,self.key, "run", self.chunksize))
+        (self.filename.name,self.bucket,self.key, "run", self.chunksize))
         self.conn.commit()
         
 
@@ -121,8 +123,10 @@ class Download():
         
 
 if __name__ == "__main__":
+    print("do not run this file")
+    exit(0)
     x =  Download("przwy-podcast", "Hitzthought.mp3",
-         "testrun3",chunksize=5000,sleep=2,maxcount=10)
+         "testrun3",chunksize=25000,sleep=2,maxcount=10)
     x.create_sqlite_table()
     while True:
         state = x.get_state()[0]
@@ -133,6 +137,7 @@ if __name__ == "__main__":
             break
         elif state == RUN:
             x.downpart()
+            time.sleep(x.sleep)
         else:
             print("unknown state: {}".format(state))
             break
