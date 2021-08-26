@@ -9,35 +9,34 @@ import sqlite3
 import time
 
 
-class Podcast():
-    def __init__(self):
-
-        self.s3 = boto3.resource("s3")
-        self.bucket = self.s3.Bucket("przwy-podcast")
-
-        self.files = self.bucket.objects.all()
-        myfiles = [i for i in self.files]
-        myfiles.sort(key=lambda x: x.last_modified, reverse=True)
-        for i in myfiles[0:7]:
-            print(i.key, i.last_modified)
-        self.lastfile = myfiles[0]
 
 
 if __name__ == "__main__":
-    econtalk = Podcast()
-    x =  dl2.Download("przwy-podcast", econtalk.lastfile.key,
-         "testrun3",chunksize=25000,sleep=2,maxcount=10)
+    econtalk = dl2.Podcast()
+
+    for fn in econtalk.files:
+        ans= input("grab {}?".format(fn.key))
+        if ans == 'y' or ans == 'yes':
+            x=fn
+            break
+    
+    # exit(0)
+    x =  dl2.Download("przwy-podcast", x.key,
+         "testrun3",chunksize=59000,sleep=2,maxcount=10)
     x.create_sqlite_table()
     while True:
         state = x.get_state()[0]
         if state == dl2.PAUSE:
             time.sleep(0.5)
-            
+           
         elif state == dl2.STOP:
             break
         elif state == dl2.RUN:
-            x.downpart()
+            if (x.downpart() == True): # done
+                exit(0)
+
             time.sleep(x.sleep)
+        
         else:
             print("unknown state: {}".format(state))
             break

@@ -3,6 +3,7 @@ import shelve
 from pathlib import Path
 import sqlite3
 import time
+import re
 
 SHELFNAME = "dl.shelf"
 CHUNKSIZE = 1
@@ -10,6 +11,7 @@ SQLITE = "running.sqlite"
 RUN = "run"
 PAUSE = 'pause'
 STOP = 'stop'
+DONE = "done"
 
 def get_downloads():
     pass
@@ -25,11 +27,11 @@ class Download():
         self.download_directory  = Path.home() / ".aws" / "downloads" / dirname
         self.filename = self.download_directory / Path(key).name
         if not self.download_directory.exists():
-            self.start_download()
+            self.make_download_db()
         else:
             print('{} essists'.format(self.download_directory))
         shelfname = self.download_directory / "dl.shelf"
-    def start_download(self):
+    def make_download_db(self):
         
         self.download_directory.mkdir(parents=True)
         self.create_sqlite_table()
@@ -78,14 +80,19 @@ class Download():
             download = self.object.get(Range="bytes={}-{}".format(size,size+self.chunksize))
             reader = download['Body']
             print (download['ContentRange'])
+            match = re.match("bytes ([0-9]+)-([0-9]+)/([0-9]+)", download['ContentRange'])
+            begin, end, tot = [int(i) for i in match.groups()]
             afterslash = download['ContentRange'].split("/")[1]
             print("afterslash: {}".format(afterslash))
             print("size is {}".format(download['ContentLength']))
             fd.write(reader.read())
-            return True
+            if end == tot-1:
+                return True
+            else:
+                return False
         except boto3.exceptions.botocore.client.ClientError as e:
             print(e)
-            return False
+            return True
     def serve_forever(self):
         while True:
             state = self.get_state()[0]
@@ -121,24 +128,25 @@ class Download():
             return False
         return rows[0]
         
+#####################
+class Podcast():
+    def __init__(self):
+
+        self.s3 = boto3.resource("s3")
+        self.bucket = self.s3.Bucket("przwy-podcast")
+
+        tmpfiles = self.bucket.objects.all()
+        myfiles = [i for i in tmpfiles]
+        myfiles.sort(key=lambda x: x.last_modified, reverse=True)
+        for i in myfiles[0:7]:
+            print(i.key, i.last_modified)
+        self.lastfile = myfiles[0]
+        self.files = myfiles
+ 
+
+######################
 
 if __name__ == "__main__":
     print("do not run this file")
     exit(0)
-    x =  Download("przwy-podcast", "Hitzthought.mp3",
-         "testrun3",chunksize=25000,sleep=2,maxcount=10)
-    x.create_sqlite_table()
-    while True:
-        state = x.get_state()[0]
-        if state == PAUSE:
-            time.sleep(0.5)
-            
-        elif state == STOP:
-            break
-        elif state == RUN:
-            x.downpart()
-            time.sleep(x.sleep)
-        else:
-            print("unknown state: {}".format(state))
-            break
            
