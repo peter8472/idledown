@@ -83,7 +83,13 @@ class Download():
             match = re.match("bytes ([0-9]+)-([0-9]+)/([0-9]+)", download['ContentRange'])
             begin, end, tot = [int(i) for i in match.groups()]
             afterslash = download['ContentRange'].split("/")[1]
-            print("afterslash: {}".format(afterslash))
+            portion = download['ContentRange'].split("-")[1]
+            num,denom = portion.split("/")
+            percent = float(num) * 100 / float(denom)
+            print("percent: {:.3f}".format(percent))
+
+        
+
             print("size is {}".format(download['ContentLength']))
             fd.write(reader.read())
             if end == tot-1:
