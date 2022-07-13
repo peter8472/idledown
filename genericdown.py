@@ -12,16 +12,9 @@ import time
 
 
 if __name__ == "__main__":
-    econtalk = dl2.Podcast()
-
-    for fn in econtalk.files:
-        ans= input("grab {}?".format(fn.key))
-        if ans == 'y' or ans == 'yes':
-            x=fn
-            break
     
-    x =  dl2.Download("przwy-podcast", x.key,
-         "testrun3",chunksize=50000,sleep=0.99,maxcount=10)
+    x =  dl2.Download("irs-form-990", "index_2020.csv",
+         "testrun3",chunksize=90000,sleep=0.5,maxcount=10)
     x.create_sqlite_table()
     while True:
         state = x.get_state()[0]
